@@ -43,3 +43,6 @@ Tabela usuarios:
 - A idade do usuário é calculada automaticamente pelo PHP.
 - As senhas são armazenadas com hash seguro (`password_hash`).
 - O arquivo `agenda03.sql` contém a estrutura da tabela `usuarios` importada do meu teste no phpMyAdmin.
+
+- <img width="1892" height="644" alt="image" src="https://github.com/user-attachments/assets/737a0ce9-72a1-4f70-9d06-e9889c3abc3b" />
+
