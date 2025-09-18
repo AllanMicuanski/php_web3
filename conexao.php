@@ -1,13 +1,11 @@
 <?php
-$host = "localhost";
-$usuario = "meuusuario";  // seu usuário MariaDB
-$senha = "minhasenha";    // sua senha MariaDB
-$banco = "agenda03";       // nome do banco
+// Carrega configuração do banco
+$config = include 'config.php';
 
-$con = new mysqli($host, $usuario, $senha, $banco);
+// Cria conexão com o banco
+$con = new mysqli($config['host'], $config['usuario'], $config['senha'], $config['banco']);
 
 // Checa conexão
 if ($con->connect_error) {
     die("Falha na conexão: " . $con->connect_error);
 }
-?>
