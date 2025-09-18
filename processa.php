@@ -1,6 +1,9 @@
 <?php
+include 'conexao.php'; // conecta ao banco
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    // Recebe os dados
     $nome     = trim($_POST["name"]);
     $email    = $_POST["email"];
     $dataNasc = $_POST["date"];
@@ -8,12 +11,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $endereco = $_POST["endereco"];
     $sexo     = $_POST["sexo"] ?? "";
     $login    = $_POST["login"];
-    $senha    = $_POST["senha"];
+    $senha    = password_hash($_POST["senha"], PASSWORD_DEFAULT); // hash da senha
 
-    // Validação: nome completo (precisa ter pelo menos 2 palavras)
+    // Validação: nome completo
     if (str_word_count($nome) < 2) {
         echo "<p style='color:red;'>⚠️ Por favor, preencha o nome completo.</p>";
-        echo "<a href='index.html'>Voltar ao formulário</a>";
+        echo "<a href='index.php'>Voltar ao formulário</a>";
         exit;
     }
 
@@ -22,32 +25,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $dataNascimento = new DateTime($dataNasc);
     $idade = $hoje->diff($dataNascimento)->y;
 
-    // Saudação de acordo com sexo
-    $saudacao = "";
-    if ($sexo === "masculino") {
-        $saudacao = "Olá Sr. $nome";
-    } elseif ($sexo === "feminino") {
-        $saudacao = "Olá Sra. $nome";
+    // Saudação
+    $saudacao = ($sexo === "masculino") ? "Olá Sr. $nome" :
+                (($sexo === "feminino") ? "Olá Sra. $nome" : "Olá $nome");
+
+    // Inserir no banco usando prepared statement
+    $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha);
+
+    if ($stmt->execute()) {
+        echo "<h2>Cadastro realizado com sucesso!</h2>";
+        echo "<p>$saudacao</p>";
+        echo "<p><strong>Email:</strong> $email</p>";
+        echo "<p><strong>Data de nascimento:</strong> $dataNasc</p>";
+        echo "<p><strong>Idade:</strong> $idade anos</p>";
+        echo "<p><strong>Estado:</strong> $estado</p>";
+        echo "<p><strong>Endereço:</strong> $endereco</p>";
+        echo ($idade < 18)
+            ? "<p style='color:red;'>⚠️ Atenção: Usuário menor de idade!</p>"
+            : "<p style='color:green;'>✅ Usuário maior de idade.</p>";
     } else {
-        $saudacao = "Olá $nome";
+        echo "Erro ao cadastrar: " . $stmt->error;
     }
 
-    // Exibe os dados
-    echo "<h2>Dados recebidos:</h2>";
-    echo "<p>$saudacao</p>";
-    echo "<p><strong>Email:</strong> $email</p>";
-    echo "<p><strong>Data de nascimento:</strong> $dataNasc</p>";
-    echo "<p><strong>Idade:</strong> $idade anos</p>";
-    echo "<p><strong>Estado:</strong> $estado</p>";
-    echo "<p><strong>Endereço:</strong> $endereco</p>";
-  
-
-    // Verifica maioridade
-    if ($idade < 18) {
-        echo "<p style='color:red;'>⚠️ Atenção: Usuário menor de idade!</p>";
-    } else {
-        echo "<p style='color:green;'>✅ Usuário maior de idade.</p>";
-    }
+    $stmt->close();
+    $con->close();
 } else {
     echo "Método de envio inválido.";
 }
