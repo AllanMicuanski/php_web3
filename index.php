@@ -104,5 +104,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
   </form>
 </div>
+
+<!-- Lista de Usuários Cadastrados -->
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">👥 Usuários Cadastrados</h4>
+    </div>
+    <div class="card-body">
+      <?php
+      // Busca todos os usuários
+      $sql = "SELECT * FROM usuarios ORDER BY nome";
+      $resultado = $con->query($sql);
+      
+      if ($resultado->num_rows > 0): ?>
+        <div class="row">
+          <?php while($usuario = $resultado->fetch_assoc()): ?>
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title text-primary">
+                    <?= htmlspecialchars($usuario['nome']) ?>
+                  </h5>
+                  <p class="card-text">
+                    <strong>Email:</strong> <?= htmlspecialchars($usuario['email']) ?><br>
+                    <strong>Login:</strong> <?= htmlspecialchars($usuario['login']) ?><br>
+                    <strong>Estado:</strong> <?= strtoupper($usuario['estado']) ?><br>
+                    <strong>Nascimento:</strong> <?= date('d/m/Y', strtotime($usuario['data_nasc'])) ?>
+                  </p>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                  <a href="editar.php?id=<?= $usuario['id'] ?>" class="btn btn-warning btn-sm flex-fill">
+                    ✏️ Editar
+                  </a>
+                  <a href="excluir.php?id=<?= $usuario['id'] ?>" 
+                     class="btn btn-danger btn-sm flex-fill"
+                     onclick="return confirm('Tem certeza que deseja excluir <?= htmlspecialchars($usuario['nome']) ?>?')">
+                    🗑️ Excluir
+                  </a>
+                </div>
+              </div>
+            </div>
+          <?php endwhile; ?>
+        </div>
+      <?php else: ?>
+        <div class="text-center p-4">
+          <h5 class="text-muted">📭 Nenhum usuário cadastrado ainda</h5>
+          <p class="text-muted">Use o formulário acima para cadastrar o primeiro usuário.</p>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
