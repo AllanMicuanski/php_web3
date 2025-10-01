@@ -1,48 +1,99 @@
-# Formulário de Cadastro (Atividade Programação Web 3)
+# CRUD - Cadastro de Usuários
 
-Formulário simples em **HTML, Bootstrap e PHP** para capturar e armazenar dados do usuário em um banco de dados **MariaDB**.
+Sistema completo de **CRUD** (Create, Read, Update, Delete) desenvolvido em **PHP** e **MariaDB** para gerenciar cadastro de usuários.
 
-## Estrutura do projeto
+## 🛠️ Tecnologias
 
-- `index.php` → formulário de cadastro
-- `processa.php` → processa os dados do formulário e insere no banco
-- `conexao.php` → arquivo responsável pela conexão com o banco
-- `agenda03.sql` → exportação do banco de dados (tabela `usuarios`)
+- **PHP 8.4+** - Backend
+- **MariaDB/MySQL** - Banco de dados
+- **Bootstrap 5** - Interface responsiva
+- **HTML5/CSS3** - Frontend
 
-## Como rodar
+## 🚀 Como executar
 
-1. Abra o terminal na pasta do projeto.
-2. Rode o servidor PHP embutido:
+### 1. Pré-requisitos
 
-   ```bash
-   php -S localhost:8000
-   ```
+```bash
+# Verificar se PHP está instalado
+php --version
 
-3. Acesse no navegador: http://localhost:8000/index.php
-4. Preencha o formulário e clique em Salvar.
-5. Para conferir os dados no banco, acesse o phpMyAdmin: http://localhost/phpmyadmin
+# Verificar se MariaDB está rodando
+systemctl status mariadb
+```
 
-## Banco de dados
+### 2. Configurar banco de dados
 
-Tabela usuarios:
-| Campo | Tipo | Observações |
-| ---------- | ------------ | ---------------------------- |
-| id | INT | PRIMARY KEY, AUTO_INCREMENT |
-| nome | VARCHAR(255) | Nome completo do usuário |
-| email | VARCHAR(255) | E-mail |
-| data_nasc | DATE | Data de nascimento |
-| estado | VARCHAR(2) | Estado |
-| endereco | VARCHAR(255) | Endereço |
-| sexo | VARCHAR(10) | Masculino/Feminino |
-| login | VARCHAR(50) | Nome de login |
-| senha | VARCHAR(255) | Senha (hash) |
+```bash
+# Iniciar MariaDB (se necessário)
+sudo systemctl start mariadb
 
-## Observações
+# Importar estrutura do banco
+sudo mariadb -u root agenda03 < usuarios.sql
+```
 
-- O formulário faz validação básica: o nome precisa ter pelo menos duas palavras.
-- A idade do usuário é calculada automaticamente pelo PHP.
-- As senhas são armazenadas com hash seguro (`password_hash`).
-- O arquivo `agenda03.sql` contém a estrutura da tabela `usuarios` importada do meu teste no phpMyAdmin.
+### 3. Configurar credenciais
 
-- <img width="1892" height="644" alt="image" src="https://github.com/user-attachments/assets/737a0ce9-72a1-4f70-9d06-e9889c3abc3b" />
+Edite o arquivo `conexao.php` com suas credenciais:
 
+```php
+$usuario = "seu_usuario";  // ex: root
+$senha = "sua_senha";      // sua senha do MariaDB
+```
+
+### 4. Executar aplicação
+
+```bash
+php -S localhost:8000
+```
+
+Acesse: **http://localhost:8000**
+
+## ⚙️ Funcionalidades
+
+- ✅ **CREATE** - Cadastrar novos usuários
+- ✅ **READ** - Listar todos os usuários
+- ✅ **UPDATE** - Editar informações existentes
+- ✅ **DELETE** - Excluir usuários
+- ✅ Interface responsiva com Bootstrap
+- ✅ Validação de dados e persistência de formulário
+- ✅ Senhas criptografadas com `password_hash()`
+- ✅ Proteção contra SQL Injection
+
+## 📁 Estrutura do projeto
+
+```
+php_web3/
+├── index.php       # Página principal (cadastro + listagem)
+├── editar.php      # Formulário de edição
+├── excluir.php     # Processa exclusão
+├── conexao.php     # Conexão com banco
+├── usuarios.sql    # Estrutura do banco
+└── README.md       # Este arquivo
+```
+
+## 🗄️ Banco de dados
+
+**Tabela:** `usuarios`
+
+| Campo     | Tipo         | Descrição           |
+| --------- | ------------ | ------------------- |
+| id        | INT          | Chave primária      |
+| nome      | VARCHAR(100) | Nome completo       |
+| email     | VARCHAR(100) | E-mail único        |
+| data_nasc | DATE         | Data nascimento     |
+| estado    | VARCHAR(2)   | UF do estado        |
+| endereco  | VARCHAR(255) | Endereço completo   |
+| sexo      | VARCHAR(10)  | Masculino/Feminino  |
+| login     | VARCHAR(50)  | Nome de usuário     |
+| senha     | VARCHAR(255) | Senha criptografada |
+
+## 📝 Validações
+
+- Nome deve conter pelo menos 2 palavras
+- Todos os campos são obrigatórios
+- Email deve ter formato válido
+- Senhas são automaticamente criptografadas
+
+---
+
+**Desenvolvido para:** Matéria de Programação Web 3 - Católica SC
