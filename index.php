@@ -3,6 +3,15 @@ include 'conexao.php'; // conecta ao banco
 
 $msg = ""; // mensagem de feedback
 
+// Variáveis para manter valores do formulário
+$form_nome = "";
+$form_email = "";
+$form_data = "";
+$form_estado = "";
+$form_endereco = "";
+$form_sexo = "";
+$form_login = "";
+
 // Verifica se há mensagem de sucesso via GET
 if (isset($_GET['msg']) && $_GET['msg'] == 'success') {
     $nome = $_GET['nome'] ?? '';
@@ -24,8 +33,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $login    = $_POST["login"];
     $senha    = password_hash($_POST["senha"], PASSWORD_DEFAULT); // hash da senha
 
+    // Salva os valores para reexibir no formulário em caso de erro
+    $form_nome = $nome;
+    $form_email = $email;
+    $form_data = $dataNasc;
+    $form_estado = $estado;
+    $form_endereco = $endereco;
+    $form_sexo = $sexo;
+    $form_login = $login;
+
     if (str_word_count($nome) < 2) {
-        $msg = "<div class='alert alert-warning'>Por favor, informe o nome completo.</div>";
+        $msg = "<div class='alert alert-warning'><strong>Atenção!</strong> Por favor, informe o nome completo (nome e sobrenome).</div>";
     } else {
         // Prepared statement seguro
         $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -64,47 +82,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Aqui vão os campos do formulário -->
     <div class="mb-3">
       <label for="name" class="form-label">Nome completo</label>
-      <input type="text" id="name" name="name" class="form-control" required />
+      <input type="text" id="name" name="name" class="form-control" 
+             value="<?= htmlspecialchars($form_nome) ?>" required />
+      <div class="form-text">Digite nome e sobrenome (ex: João Silva)</div>
     </div>
     <div class="mb-3">
       <label for="email" class="form-label">E-mail</label>
-      <input type="email" id="email" name="email" class="form-control" required />
+      <input type="email" id="email" name="email" class="form-control" 
+             value="<?= htmlspecialchars($form_email) ?>" required />
     </div>
     <div class="mb-3">
       <label for="date" class="form-label">Data de nascimento</label>
-      <input type="date" id="date" name="date" class="form-control" required />
+      <input type="date" id="date" name="date" class="form-control" 
+             value="<?= htmlspecialchars($form_data) ?>" required />
     </div>
     <div class="mb-3">
       <label for="estado" class="form-label">Estado</label>
       <select id="estado" name="estado" class="form-select" required>
-        <option selected disabled value="">Escolha...</option>
-        <option value="pr">Paraná</option>
-        <option value="sc">Santa Catarina</option>
-        <option value="rs">Rio Grande do Sul</option>
-        <option value="sp">São Paulo</option>
-        <option value="rj">Rio de Janeiro</option>
-        <option value="mg">Minas Gerais</option>
-        <option value="es">Espírito Santo</option>
+        <option value="">Escolha...</option>
+        <option value="pr" <?= $form_estado == 'pr' ? 'selected' : '' ?>>Paraná</option>
+        <option value="sc" <?= $form_estado == 'sc' ? 'selected' : '' ?>>Santa Catarina</option>
+        <option value="rs" <?= $form_estado == 'rs' ? 'selected' : '' ?>>Rio Grande do Sul</option>
+        <option value="sp" <?= $form_estado == 'sp' ? 'selected' : '' ?>>São Paulo</option>
+        <option value="rj" <?= $form_estado == 'rj' ? 'selected' : '' ?>>Rio de Janeiro</option>
+        <option value="mg" <?= $form_estado == 'mg' ? 'selected' : '' ?>>Minas Gerais</option>
+        <option value="es" <?= $form_estado == 'es' ? 'selected' : '' ?>>Espírito Santo</option>
       </select>
     </div>
     <div class="mb-3">
       <label for="endereco" class="form-label">Endereço</label>
-      <input type="text" id="endereco" name="endereco" class="form-control" required />
+      <input type="text" id="endereco" name="endereco" class="form-control" 
+             value="<?= htmlspecialchars($form_endereco) ?>" required />
     </div>
     <div class="mb-3">
       <label class="form-label d-block">Sexo</label>
       <div class="form-check form-check-inline">
-        <input type="radio" id="masculino" name="sexo" value="masculino" class="form-check-input" required />
+        <input type="radio" id="masculino" name="sexo" value="masculino" 
+               class="form-check-input" <?= $form_sexo == 'masculino' ? 'checked' : '' ?> required />
         <label for="masculino" class="form-check-label">Masculino</label>
       </div>
       <div class="form-check form-check-inline">
-        <input type="radio" id="feminino" name="sexo" value="feminino" class="form-check-input" />
+        <input type="radio" id="feminino" name="sexo" value="feminino" 
+               class="form-check-input" <?= $form_sexo == 'feminino' ? 'checked' : '' ?> />
         <label for="feminino" class="form-check-label">Feminino</label>
       </div>
     </div>
     <div class="mb-3">
       <label for="login" class="form-label">Login</label>
-      <input type="text" id="login" name="login" class="form-control" required />
+      <input type="text" id="login" name="login" class="form-control" 
+             value="<?= htmlspecialchars($form_login) ?>" required />
     </div>
     <div class="mb-3">
       <label for="senha" class="form-label">Senha</label>
