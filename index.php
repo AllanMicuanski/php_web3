@@ -3,6 +3,16 @@ include 'conexao.php'; // conecta ao banco
 
 $msg = ""; // mensagem de feedback
 
+// Verifica se há mensagem de sucesso via GET
+if (isset($_GET['msg']) && $_GET['msg'] == 'success') {
+    $nome = $_GET['nome'] ?? '';
+    $prefixo = $_GET['prefixo'] ?? '';
+    $msg = "<div class='alert alert-success alert-dismissible fade show'>
+        <strong>Sucesso!</strong> Olá $prefixo $nome! Cadastro realizado com sucesso.
+        <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
+    </div>";
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $nome     = trim($_POST["name"]);
@@ -23,7 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($stmt->execute()) {
             $prefixo = ($sexo == "masculino") ? "Sr." : "Sra.";
-            $msg = "<div class='alert alert-success'>Olá $prefixo $nome! Cadastro realizado com sucesso.</div>";
+            // Redireciona para a página principal após sucesso
+            header("Location: index.php?msg=success&nome=" . urlencode($nome) . "&prefixo=" . urlencode($prefixo));
+            exit();
         } else {
             $msg = "<div class='alert alert-danger'>Erro: " . $stmt->error . "</div>";
         }
@@ -157,5 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   </div>
 </div>
 
+<!-- Bootstrap JS para funcionalidade do alert -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
