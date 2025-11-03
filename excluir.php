@@ -4,8 +4,8 @@ include 'conexao.php';
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     
-    // Busca o usuário para confirmar que existe
-    $stmt = $con->prepare("SELECT nome FROM usuarios WHERE id = ?");
+    // Busca o usuário e sua foto para confirmar que existe
+    $stmt = $con->prepare("SELECT nome, foto FROM usuarios WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $resultado = $stmt->get_result();
@@ -18,6 +18,11 @@ if (isset($_GET['id'])) {
         $stmt2->bind_param("i", $id);
         
         if ($stmt2->execute()) {
+            // Remove a foto do servidor se existir
+            if ($usuario['foto'] && file_exists('uploads/' . $usuario['foto'])) {
+                unlink('uploads/' . $usuario['foto']);
+            }
+            
             $mensagem = "Usuário '{$usuario['nome']}' foi excluído com sucesso!";
             $tipo = "success";
         } else {
