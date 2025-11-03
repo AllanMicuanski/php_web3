@@ -33,12 +33,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $sexo = $_POST["sexo"] ?? "";
     $login = $_POST["login"];
     
+    // Processa upload da nova foto (se enviada)
+    $novaFoto = null;
+    $fotoAtual = null;
+    
+    // Busca a foto atual do usuário
+    $stmt_foto = $con->prepare("SELECT foto FROM usuarios WHERE id = ?");
+    $stmt_foto->bind_param("i", $id);
+    $stmt_foto->execute();
+    $resultado_foto = $stmt_foto->get_result();
+    if ($resultado_foto->num_rows > 0) {
+        $fotoAtual = $resultado_foto->fetch_assoc()['foto'];
+    }
+    $stmt_foto->close();
+    
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $arquivo = $_FILES['foto'];
+        $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
+        $extensoesPermitidas = ['jpg', 'jpeg', 'png', 'gif'];
+        
+        if (in_array($extensao, $extensoesPermitidas) && $arquivo['size'] <= 2000000) { // 2MB
+            $novaFoto = uniqid() . '.' . $extensao;
+            $caminhoDestino = 'uploads/' . $novaFoto;
+            
+            if (move_uploaded_file($arquivo['tmp_name'], $caminhoDestino)) {
+                // Remove a foto antiga se existir
+                if ($fotoAtual && file_exists('uploads/' . $fotoAtual)) {
+                    unlink('uploads/' . $fotoAtual);
+                }
+            } else {
+                $novaFoto = null;
+            }
+        }
+    }
+    
+    // Se não há nova foto, mantém a atual
+    $fotoParaSalvar = $novaFoto ?? $fotoAtual;
+    
     if (str_word_count($nome) < 2) {
         $msg = "<div class='alert alert-warning'>Por favor, informe o nome completo.</div>";
     } else {
-        // Atualiza os dados (sem senha por enquanto)
-        $stmt = $con->prepare("UPDATE usuarios SET nome=?, email=?, data_nasc=?, estado=?, endereco=?, sexo=?, login=? WHERE id=?");
-        $stmt->bind_param("sssssssi", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $id);
+        // Atualiza os dados incluindo a foto
+        $stmt = $con->prepare("UPDATE usuarios SET nome=?, email=?, data_nasc=?, estado=?, endereco=?, sexo=?, login=?, foto=? WHERE id=?");
+        $stmt->bind_param("ssssssssi", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $fotoParaSalvar, $id);
         
         if ($stmt->execute()) {
             $msg = "<div class='alert alert-success'>Usuário atualizado com sucesso! <a href='index.php' class='alert-link'>Ver lista</a></div>";
@@ -85,7 +122,7 @@ if (!$usuario && empty($msg)) {
       <?php if($msg) echo $msg; ?>
       
       <?php if($usuario): ?>
-      <form action="" method="post">
+      <form action="" method="post" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?= $usuario['id'] ?>">
         
         <div class="row">
@@ -145,6 +182,19 @@ if (!$usuario && empty($msg)) {
           <label for="login" class="form-label">Login *</label>
           <input type="text" id="login" name="login" class="form-control" 
                  value="<?= htmlspecialchars($usuario['login']) ?>" required />
+        </div>
+
+        <div class="mb-3">
+          <label for="foto" class="form-label">Foto de Perfil</label>
+          <?php if ($usuario['foto']): ?>
+            <div class="mb-2">
+              <img src="uploads/<?= htmlspecialchars($usuario['foto']) ?>" 
+                   alt="Foto atual" class="img-thumbnail" style="max-width: 150px;">
+              <small class="text-muted d-block">Foto atual</small>
+            </div>
+          <?php endif; ?>
+          <input type="file" id="foto" name="foto" class="form-control" accept="image/*" />
+          <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 2MB). Deixe vazio para manter a foto atual.</div>
         </div>
 
         <div class="alert alert-info">

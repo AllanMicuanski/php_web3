@@ -32,6 +32,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sexo     = $_POST["sexo"] ?? "";
     $login    = $_POST["login"];
     $senha    = password_hash($_POST["senha"], PASSWORD_DEFAULT); // hash da senha
+    
+    // Processa upload da foto
+    $nomeArquivo = null;
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $arquivo = $_FILES['foto'];
+        $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
+        $extensoesPermitidas = ['jpg', 'jpeg', 'png', 'gif'];
+        
+        if (in_array($extensao, $extensoesPermitidas) && $arquivo['size'] <= 2000000) { // 2MB
+            $nomeArquivo = uniqid() . '.' . $extensao;
+            $caminhoDestino = 'uploads/' . $nomeArquivo;
+            
+            if (!move_uploaded_file($arquivo['tmp_name'], $caminhoDestino)) {
+                $nomeArquivo = null;
+            }
+        }
+    }
 
     // Salva os valores para reexibir no formulário em caso de erro
     $form_nome = $nome;
@@ -46,8 +63,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $msg = "<div class='alert alert-warning'><strong>Atenção!</strong> Por favor, informe o nome completo (nome e sobrenome).</div>";
     } else {
         // Prepared statement seguro
-        $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha);
+        $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha, $nomeArquivo);
 
         if ($stmt->execute()) {
             $prefixo = ($sexo == "masculino") ? "Sr." : "Sra.";
@@ -71,6 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Cadastro</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-5 border p-4 bg-white rounded shadow">
@@ -78,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   <?php if($msg) echo $msg; ?>
 
-  <form action="" method="post">
+  <form action="" method="post" enctype="multipart/form-data">
     <!-- Aqui vão os campos do formulário -->
     <div class="mb-3">
       <label for="name" class="form-label">Nome completo</label>
@@ -136,6 +154,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <label for="senha" class="form-label">Senha</label>
       <input type="password" id="senha" name="senha" class="form-control" required />
     </div>
+    <div class="mb-3">
+      <label for="foto" class="form-label">Foto de Perfil</label>
+      <input type="file" id="foto" name="foto" class="form-control" accept="image/*" />
+      <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</div>
+    </div>
     <div class="d-flex gap-2">
       <button type="reset" class="btn btn-secondary">Limpar</button>
       <button type="submit" class="btn btn-primary">Salvar</button>
@@ -160,6 +183,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <?php while($usuario = $resultado->fetch_assoc()): ?>
             <div class="col-md-6 col-lg-4 mb-3">
               <div class="card h-100">
+                <?php if ($usuario['foto']): ?>
+                  <img src="uploads/<?= htmlspecialchars($usuario['foto']) ?>" 
+                       class="card-img-top" alt="Foto de <?= htmlspecialchars($usuario['nome']) ?>"
+                       style="height: 200px; object-fit: contain;">
+                <?php else: ?>
+                  <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                       style="height: 200px;">
+                    <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
+                  </div>
+                <?php endif; ?>
                 <div class="card-body">
                   <h5 class="card-title text-primary">
                     <?= htmlspecialchars($usuario['nome']) ?>
