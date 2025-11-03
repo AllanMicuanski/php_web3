@@ -32,6 +32,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sexo     = $_POST["sexo"] ?? "";
     $login    = $_POST["login"];
     $senha    = password_hash($_POST["senha"], PASSWORD_DEFAULT); // hash da senha
+    
+    // Processa upload da foto
+    $nomeArquivo = null;
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $arquivo = $_FILES['foto'];
+        $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
+        $extensoesPermitidas = ['jpg', 'jpeg', 'png', 'gif'];
+        
+        if (in_array($extensao, $extensoesPermitidas) && $arquivo['size'] <= 2000000) { // 2MB
+            $nomeArquivo = uniqid() . '.' . $extensao;
+            $caminhoDestino = 'uploads/' . $nomeArquivo;
+            
+            if (!move_uploaded_file($arquivo['tmp_name'], $caminhoDestino)) {
+                $nomeArquivo = null;
+            }
+        }
+    }
 
     // Salva os valores para reexibir no formulário em caso de erro
     $form_nome = $nome;
@@ -46,8 +63,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $msg = "<div class='alert alert-warning'><strong>Atenção!</strong> Por favor, informe o nome completo (nome e sobrenome).</div>";
     } else {
         // Prepared statement seguro
-        $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha);
+        $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha, $nomeArquivo);
 
         if ($stmt->execute()) {
             $prefixo = ($sexo == "masculino") ? "Sr." : "Sra.";
@@ -78,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   <?php if($msg) echo $msg; ?>
 
-  <form action="" method="post">
+  <form action="" method="post" enctype="multipart/form-data">
     <!-- Aqui vão os campos do formulário -->
     <div class="mb-3">
       <label for="name" class="form-label">Nome completo</label>
@@ -135,6 +152,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="mb-3">
       <label for="senha" class="form-label">Senha</label>
       <input type="password" id="senha" name="senha" class="form-control" required />
+    </div>
+    <div class="mb-3">
+      <label for="foto" class="form-label">Foto de Perfil</label>
+      <input type="file" id="foto" name="foto" class="form-control" accept="image/*" />
+      <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</div>
     </div>
     <div class="d-flex gap-2">
       <button type="reset" class="btn btn-secondary">Limpar</button>
