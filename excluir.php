@@ -1,4 +1,5 @@
 <?php
+include 'verificar_sessao.php'; // Verifica se está logado
 include 'conexao.php';
 
 if (isset($_GET['id'])) {

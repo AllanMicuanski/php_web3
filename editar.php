@@ -1,4 +1,5 @@
 <?php
+include 'verificar_sessao.php'; // Verifica se está logado
 include 'conexao.php';
 
 $msg = "";
@@ -95,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
 }
 
 if (!$usuario && empty($msg)) {
-    header("Location: index.php");
+    header("Location: home.php");
     exit;
 }
 ?>
@@ -108,10 +109,28 @@ if (!$usuario && empty($msg)) {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body class="bg-light">
+<!-- Header com informações do usuário -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="home.php">
+      <i class="bi bi-house-door"></i> Sistema CRUD
+    </a>
+    <div class="navbar-nav ms-auto">
+      <span class="navbar-text me-3">
+        <i class="bi bi-person-circle"></i> 
+        Olá, <?= htmlspecialchars($_SESSION['usuario_nome']) ?>!
+      </span>
+      <a href="logout.php" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-box-arrow-right"></i> Sair
+      </a>
+    </div>
+  </div>
+</nav>
+
 <div class="container mt-4">
   <!-- Navegação -->
   <div class="mb-3">
-    <a href="index.php" class="btn btn-outline-secondary">← Voltar para Lista</a>
+    <a href="home.php" class="btn btn-outline-secondary">← Voltar para Lista</a>
   </div>
 
   <div class="card shadow">
