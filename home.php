@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt->execute()) {
             $prefixo = ($sexo == "masculino") ? "Sr." : "Sra.";
             // Redireciona para a página principal após sucesso
-            header("Location: index.php?msg=success&nome=" . urlencode($nome) . "&prefixo=" . urlencode($prefixo));
+            header("Location: home.php?msg=success&nome=" . urlencode($nome) . "&prefixo=" . urlencode($prefixo));
             exit();
         } else {
             $msg = "<div class='alert alert-danger'>Erro: " . $stmt->error . "</div>";
@@ -92,6 +92,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+<!-- Header com informações do usuário -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="home.php">
+      <i class="bi bi-house-door"></i> Sistema CRUD
+    </a>
+    <div class="navbar-nav ms-auto">
+      <span class="navbar-text me-3">
+        <i class="bi bi-person-circle"></i> 
+        Olá, <?= htmlspecialchars($_SESSION['usuario_nome']) ?>!
+      </span>
+      <a href="logout.php" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-box-arrow-right"></i> Sair
+      </a>
+    </div>
+  </div>
+</nav>
+
 <div class="container mt-5 border p-4 bg-white rounded shadow">
   <h2 class="mb-4">Formulário de Cadastro</h2>
 
