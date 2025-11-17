@@ -1,4 +1,9 @@
 <?php
+// Debug - descomentar se necessário
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
 include 'verificar_sessao.php'; // Verifica se está logado
 include 'conexao.php';
 
@@ -28,11 +33,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $id = intval($_POST['id']);
     $nome = trim($_POST["name"]);
     $email = $_POST["email"];
-    $dataNasc = $_POST["date"];
+    $dataNasc = $_POST["date"]; // Já vem no formato YYYY-MM-DD do input date
     $estado = $_POST["estado"];
     $endereco = $_POST["endereco"];
     $sexo = $_POST["sexo"] ?? "";
     $login = $_POST["login"];
+    $interesses = isset($_POST["interesses"]) && is_array($_POST["interesses"]) ? $_POST["interesses"] : [];
     
     // Processa upload da nova foto (se enviada)
     $novaFoto = null;
@@ -79,6 +85,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
         $stmt->bind_param("ssssssssi", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $fotoParaSalvar, $id);
         
         if ($stmt->execute()) {
+            // Remove interesses antigos
+            $stmt_del = $con->prepare("DELETE FROM pessoa_interesse WHERE fk_pessoa_cod = ?");
+            $stmt_del->bind_param("i", $id);
+            $stmt_del->execute();
+            $stmt_del->close();
+            
+            // Adiciona novos interesses
+            if (!empty($interesses) && is_array($interesses)) {
+                $stmt_interesse = $con->prepare("INSERT INTO pessoa_interesse (fk_pessoa_cod, fk_interesse_cod) VALUES (?, ?)");
+                foreach ($interesses as $interesse_cod) {
+                    $interesse_cod = intval($interesse_cod); // Garante que é inteiro
+                    $stmt_interesse->bind_param("ii", $id, $interesse_cod);
+                    $stmt_interesse->execute();
+                }
+                $stmt_interesse->close();
+            }
+            
             $msg = "<div class='alert alert-success'>Usuário atualizado com sucesso! <a href='home.php' class='alert-link'>Ver lista</a></div>";
             
             // Recarrega os dados atualizados
@@ -142,7 +165,7 @@ if (!$usuario && empty($msg)) {
       
       <?php if($usuario): ?>
       <form action="" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="<?= $usuario['id'] ?>">
+        <input type="hidden" name="id" value="<?= $usuario['cod'] ?>">
         
         <div class="row">
           <div class="col-md-6 mb-3">
@@ -161,7 +184,7 @@ if (!$usuario && empty($msg)) {
           <div class="col-md-4 mb-3">
             <label for="date" class="form-label">Data de nascimento *</label>
             <input type="date" id="date" name="date" class="form-control" 
-                   value="<?= $usuario['data_nasc'] ?>" required />
+                   value="<?= $usuario['data_nascimento'] ?>" required />
           </div>
           <div class="col-md-4 mb-3">
             <label for="estado" class="form-label">Estado *</label>
@@ -216,12 +239,64 @@ if (!$usuario && empty($msg)) {
           <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 2MB). Deixe vazio para manter a foto atual.</div>
         </div>
 
+        <!-- Checkboxes de Interesses -->
+        <div class="mb-3">
+          <label class="form-label d-block">
+            <i class="bi bi-heart"></i> Interesses
+          </label>
+          <div class="row">
+            <?php
+            // Busca interesses atuais da pessoa
+            $interesses_atuais = [];
+            $stmt_int = $con->prepare("SELECT fk_interesse_cod FROM pessoa_interesse WHERE fk_pessoa_cod = ?");
+            $stmt_int->bind_param("i", $usuario['cod']);
+            $stmt_int->execute();
+            $result_int = $stmt_int->get_result();
+            while($row_int = $result_int->fetch_assoc()) {
+                $interesses_atuais[] = $row_int['fk_interesse_cod'];
+            }
+            $stmt_int->close();
+            
+            // Busca todos os interesses disponíveis
+            $sql_interesses = "SELECT * FROM interesse ORDER BY nome";
+            $resultado_interesses = $con->query($sql_interesses);
+            
+            if ($resultado_interesses->num_rows > 0):
+              while($interesse = $resultado_interesses->fetch_assoc()):
+                $checked = in_array($interesse['cod'], $interesses_atuais) ? 'checked' : '';
+            ?>
+              <div class="col-md-4 col-sm-6">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" 
+                         name="interesses[]" 
+                         value="<?= $interesse['cod'] ?>" 
+                         id="interesse_<?= $interesse['cod'] ?>"
+                         <?= $checked ?>>
+                  <label class="form-check-label" for="interesse_<?= $interesse['cod'] ?>">
+                    <?= htmlspecialchars($interesse['nome']) ?>
+                  </label>
+                </div>
+              </div>
+            <?php 
+              endwhile;
+            else:
+            ?>
+              <div class="col-12">
+                <p class="text-muted">
+                  Nenhum interesse cadastrado. 
+                  <a href="interesses.php">Cadastrar interesses</a>
+                </p>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
         <div class="alert alert-info">
           <strong>ℹ️ Nota:</strong> A senha não pode ser alterada nesta versão por segurança.
         </div>
 
         <div class="d-flex gap-2">
-          <a href="index.php" class="btn btn-secondary">Cancelar</a>
+          <a href="home.php" class="btn btn-secondary">Cancelar</a>
           <button type="submit" class="btn btn-warning">💾 Salvar Alterações</button>
         </div>
       </form>

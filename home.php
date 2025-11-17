@@ -33,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sexo     = $_POST["sexo"] ?? "";
     $login    = $_POST["login"];
     $senha    = password_hash($_POST["senha"], PASSWORD_DEFAULT); // hash da senha
+    $interesses = $_POST["interesses"] ?? []; // Array de interesses selecionados
     
     // Processa upload da foto
     $nomeArquivo = null;
@@ -68,6 +69,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("sssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha, $nomeArquivo);
 
         if ($stmt->execute()) {
+            $pessoa_cod = $con->insert_id; // Pega o ID da pessoa inserida
+            
+            // Salva os interesses selecionados
+            if (!empty($interesses)) {
+                $stmt_interesse = $con->prepare("INSERT INTO pessoa_interesse (fk_pessoa_cod, fk_interesse_cod) VALUES (?, ?)");
+                foreach ($interesses as $interesse_cod) {
+                    $stmt_interesse->bind_param("ii", $pessoa_cod, $interesse_cod);
+                    $stmt_interesse->execute();
+                }
+                $stmt_interesse->close();
+            }
+            
             $prefixo = ($sexo == "masculino") ? "Sr." : "Sra.";
             // Redireciona para a página principal após sucesso
             header("Location: home.php?msg=success&nome=" . urlencode($nome) . "&prefixo=" . urlencode($prefixo));
@@ -181,6 +194,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <input type="file" id="foto" name="foto" class="form-control" accept="image/*" />
       <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</div>
     </div>
+    
+    <!-- Checkboxes de Interesses -->
+    <div class="mb-3">
+      <label class="form-label d-block">
+        <i class="bi bi-heart"></i> Interesses
+      </label>
+      <div class="row">
+        <?php
+        // Busca todos os interesses disponíveis
+        $sql_interesses = "SELECT * FROM interesse ORDER BY nome";
+        $resultado_interesses = $con->query($sql_interesses);
+        
+        if ($resultado_interesses->num_rows > 0):
+          while($interesse = $resultado_interesses->fetch_assoc()):
+        ?>
+          <div class="col-md-4 col-sm-6">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" 
+                     name="interesses[]" 
+                     value="<?= $interesse['cod'] ?>" 
+                     id="interesse_<?= $interesse['cod'] ?>">
+              <label class="form-check-label" for="interesse_<?= $interesse['cod'] ?>">
+                <?= htmlspecialchars($interesse['nome']) ?>
+              </label>
+            </div>
+          </div>
+        <?php 
+          endwhile;
+        else:
+        ?>
+          <div class="col-12">
+            <p class="text-muted">
+              Nenhum interesse cadastrado. 
+              <a href="interesses.php">Cadastrar interesses</a>
+            </p>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+    
     <div class="d-flex gap-2">
       <button type="reset" class="btn btn-secondary">Limpar</button>
       <button type="submit" class="btn btn-primary">Salvar</button>
@@ -196,8 +249,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
     <div class="card-body">
       <?php
-      // Busca todos os usuários
-      $sql = "SELECT * FROM pessoa ORDER BY nome";
+      // Busca todos os usuários com seus interesses
+      $sql = "SELECT p.*, GROUP_CONCAT(i.nome SEPARATOR ', ') as interesses
+              FROM pessoa p
+              LEFT JOIN pessoa_interesse pi ON p.cod = pi.fk_pessoa_cod
+              LEFT JOIN interesse i ON pi.fk_interesse_cod = i.cod
+              GROUP BY p.cod
+              ORDER BY p.nome";
       $resultado = $con->query($sql);
       
       if ($resultado->num_rows > 0): ?>
@@ -223,7 +281,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <strong>Email:</strong> <?= htmlspecialchars($usuario['email']) ?><br>
                     <strong>Login:</strong> <?= htmlspecialchars($usuario['login']) ?><br>
                     <strong>Estado:</strong> <?= strtoupper($usuario['estado']) ?><br>
-                    <strong>Nascimento:</strong> <?= date('d/m/Y', strtotime($usuario['data_nasc'])) ?>
+                    <strong>Nascimento:</strong> <?= date('d/m/Y', strtotime($usuario['data_nascimento'])) ?><br>
+                    <strong><i class="bi bi-heart"></i> Interesses:</strong> 
+                    <?php if($usuario['interesses']): ?>
+                      <span class="badge bg-info"><?= htmlspecialchars($usuario['interesses']) ?></span>
+                    <?php else: ?>
+                      <span class="text-muted">Nenhum</span>
+                    <?php endif; ?>
                   </p>
                 </div>
                 <div class="card-footer d-flex gap-2">
