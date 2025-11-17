@@ -6,7 +6,7 @@ if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     
     // Busca o usuário e sua foto para confirmar que existe
-    $stmt = $con->prepare("SELECT nome, foto FROM usuarios WHERE id = ?");
+    $stmt = $con->prepare("SELECT nome, foto FROM pessoa WHERE cod = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $resultado = $stmt->get_result();
@@ -15,7 +15,7 @@ if (isset($_GET['id'])) {
         $usuario = $resultado->fetch_assoc();
         
         // Exclui o usuário
-        $stmt2 = $con->prepare("DELETE FROM usuarios WHERE id = ?");
+        $stmt2 = $con->prepare("DELETE FROM pessoa WHERE cod = ?");
         $stmt2->bind_param("i", $id);
         
         if ($stmt2->execute()) {
@@ -68,7 +68,7 @@ $con->close();
         <?= htmlspecialchars($mensagem) ?>
       </div>
       
-      <a href="index.php" class="btn btn-primary btn-lg">
+      <a href="home.php" class="btn btn-primary btn-lg">
         🏠 Voltar para Lista de Usuários
       </a>
     </div>
@@ -78,7 +78,7 @@ $con->close();
 <!-- Redirecionamento automático -->
 <script>
   setTimeout(function() {
-    window.location.href = 'index.php';
+    window.location.href = 'home.php';
   }, 3000); // 3 segundos
 </script>
 </body>

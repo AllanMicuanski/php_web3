@@ -10,7 +10,7 @@ if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     
     // Busca o usuário
-    $stmt = $con->prepare("SELECT * FROM usuarios WHERE id = ?");
+    $stmt = $con->prepare("SELECT * FROM pessoa WHERE cod = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $resultado = $stmt->get_result();
@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $fotoAtual = null;
     
     // Busca a foto atual do usuário
-    $stmt_foto = $con->prepare("SELECT foto FROM usuarios WHERE id = ?");
+    $stmt_foto = $con->prepare("SELECT foto FROM pessoa WHERE cod = ?");
     $stmt_foto->bind_param("i", $id);
     $stmt_foto->execute();
     $resultado_foto = $stmt_foto->get_result();
@@ -75,14 +75,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
         $msg = "<div class='alert alert-warning'>Por favor, informe o nome completo.</div>";
     } else {
         // Atualiza os dados incluindo a foto
-        $stmt = $con->prepare("UPDATE usuarios SET nome=?, email=?, data_nasc=?, estado=?, endereco=?, sexo=?, login=?, foto=? WHERE id=?");
+        $stmt = $con->prepare("UPDATE pessoa SET nome=?, email=?, data_nascimento=?, estado=?, endereco=?, sexo=?, login=?, foto=? WHERE cod=?");
         $stmt->bind_param("ssssssssi", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $fotoParaSalvar, $id);
         
         if ($stmt->execute()) {
-            $msg = "<div class='alert alert-success'>Usuário atualizado com sucesso! <a href='index.php' class='alert-link'>Ver lista</a></div>";
+            $msg = "<div class='alert alert-success'>Usuário atualizado com sucesso! <a href='home.php' class='alert-link'>Ver lista</a></div>";
             
             // Recarrega os dados atualizados
-            $stmt2 = $con->prepare("SELECT * FROM usuarios WHERE id = ?");
+            $stmt2 = $con->prepare("SELECT * FROM pessoa WHERE cod = ?");
             $stmt2->bind_param("i", $id);
             $stmt2->execute();
             $resultado2 = $stmt2->get_result();

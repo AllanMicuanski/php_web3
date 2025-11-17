@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     if (!empty($login) && !empty($senha)) {
         // Busca o usuário no banco
-        $stmt = $con->prepare("SELECT id, nome, login, senha FROM usuarios WHERE login = ?");
+        $stmt = $con->prepare("SELECT cod, nome, login, senha FROM pessoa WHERE login = ?");
         $stmt->bind_param("s", $login);
         $stmt->execute();
         $resultado = $stmt->get_result();
@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Verifica a senha
             if (password_verify($senha, $usuario['senha'])) {
                 // Login bem-sucedido
-                $_SESSION['usuario_id'] = $usuario['id'];
+                $_SESSION['usuario_id'] = $usuario['cod'];
                 $_SESSION['usuario_nome'] = $usuario['nome'];
                 $_SESSION['usuario_login'] = $usuario['login'];
                 

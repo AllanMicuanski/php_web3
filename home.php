@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $msg = "<div class='alert alert-warning'><strong>Atenção!</strong> Por favor, informe o nome completo (nome e sobrenome).</div>";
     } else {
         // Prepared statement seguro
-        $stmt = $con->prepare("INSERT INTO usuarios (nome, email, data_nasc, estado, endereco, sexo, login, senha, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $con->prepare("INSERT INTO pessoa (nome, email, data_nascimento, estado, endereco, sexo, login, senha, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("sssssssss", $nome, $email, $dataNasc, $estado, $endereco, $sexo, $login, $senha, $nomeArquivo);
 
         if ($stmt->execute()) {
@@ -99,6 +99,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <i class="bi bi-house-door"></i> Sistema CRUD
     </a>
     <div class="navbar-nav ms-auto">
+      <a href="interesses.php" class="btn btn-outline-light btn-sm me-2">
+        <i class="bi bi-heart"></i> Gerenciar Interesses
+      </a>
       <span class="navbar-text me-3">
         <i class="bi bi-person-circle"></i> 
         Olá, <?= htmlspecialchars($_SESSION['usuario_nome']) ?>!
@@ -194,7 +197,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="card-body">
       <?php
       // Busca todos os usuários
-      $sql = "SELECT * FROM usuarios ORDER BY nome";
+      $sql = "SELECT * FROM pessoa ORDER BY nome";
       $resultado = $con->query($sql);
       
       if ($resultado->num_rows > 0): ?>
@@ -224,10 +227,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   </p>
                 </div>
                 <div class="card-footer d-flex gap-2">
-                  <a href="editar.php?id=<?= $usuario['id'] ?>" class="btn btn-warning btn-sm flex-fill">
+                  <a href="editar.php?id=<?= $usuario['cod'] ?>" class="btn btn-warning btn-sm flex-fill">
                     ✏️ Editar
                   </a>
-                  <a href="excluir.php?id=<?= $usuario['id'] ?>" 
+                  <a href="excluir.php?id=<?= $usuario['cod'] ?>" 
                      class="btn btn-danger btn-sm flex-fill"
                      onclick="return confirm('Tem certeza que deseja excluir <?= htmlspecialchars($usuario['nome']) ?>?')">
                     🗑️ Excluir
